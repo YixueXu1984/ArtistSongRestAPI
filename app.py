@@ -19,7 +19,7 @@ artists = [
 ]
 
 
-@app.get("/artist")  # http://127.0.1:5000/artists
+@app.get("/artist")  # http://127.0.1:5000/artist
 def get_artists():
     return {"artists": artists}
 
