@@ -21,6 +21,7 @@ def create_artist():
 
 
 @app.post("/song")
+#TODO
 def create_song(name):
     request_data = request.get_json()
     for artist in artists:
