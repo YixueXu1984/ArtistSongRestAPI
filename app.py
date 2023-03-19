@@ -1,41 +1,26 @@
 from flask import Flask, request
+from db import songs, albums, artists
+import uuid
 
 app = Flask(__name__)
 
-artists = [
-    {
-        "name": "Bob Dylan",
-        "songs": [
-            {
-                "name": "Hurricane",
-                "release year": 1976
-            },
-            {
-                "name": "One more cup of coffee",
-                "release year": 1976
-            }
-        ]
-    }
-]
 
 
 @app.get("/artist")  # http://127.0.1:5000/artist
 def get_artists():
-    return {"artists": artists}
+    return {"artists": list(artists.values())}
 
 
 @app.post("/artist")
 def create_artist():
-    request_data = request.get_json()
-    new_artist = {
-        "name": request_data["name"],
-        "songs": []
-    }
-    artists.append(new_artist)
-    return new_artist, 201
+    artist_data = request.get_json()
+    artist_id = uuid.uuid4().hex
+    artist = {**artist_data, "id":artist_id}
+    artists[artist_id] = artist
+    return artist, 201
 
 
-@app.post("/artist/<string:name>/song")
+@app.post("/song")
 def create_song(name):
     request_data = request.get_json()
     for artist in artists:
@@ -50,12 +35,13 @@ def create_song(name):
     return {"message": "Artist not found"}, 404
 
 
-@app.get("/artist/<string:name>")
-def get_artist(name):
-    for artist in artists:
-        if artist["name"] == name:
-            return artist
-    return {"message": "Artist not found"}, 404
+@app.get("/artist/<string:artist_id>")
+def get_artist(artist_id):
+    try:
+        return artists[artist_id]
+    except KeyError:
+        return {"message": "Store not found"}, 404
+
 
 
 @app.get("/artist/<string:name>/song")
