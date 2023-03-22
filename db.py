@@ -1,4 +1,8 @@
 artists = {
+    1: {
+        "name": "Bob Dylan",
+        
+    }
 
 }
 

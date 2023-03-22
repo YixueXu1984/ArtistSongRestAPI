@@ -1,9 +1,9 @@
 from flask import Flask, request
+from flask_smorest import abort
 from db import songs, albums, artists
 import uuid
 
 app = Flask(__name__)
-
 
 
 @app.get("/artist")  # http://127.0.1:5000/artist
@@ -15,25 +15,26 @@ def get_artists():
 def create_artist():
     artist_data = request.get_json()
     artist_id = uuid.uuid4().hex
-    artist = {**artist_data, "id":artist_id}
+    artist = {**artist_data, "id": artist_id}
     artists[artist_id] = artist
     return artist, 201
 
 
 @app.post("/song")
-#TODO
-def create_song(name):
-    request_data = request.get_json()
-    for artist in artists:
-        if artist["name"] == name:
-            new_song = {
-                "name": request_data["name"],
-                "release year": request_data["release year"]
-            }
-            artist["songs"].append(new_song)
-            return new_song, 201
+def create_song():
+    song_data = request.get_json()
+    if song_data["artist_id"] not in artists:
+        abort(404, message="Artist not found.")
+    song_id = uuid.uuid4().hex
+    song = {**song_data, "id": song_id}
+    songs[song_id] = song
 
-    return {"message": "Artist not found"}, 404
+    return song, 201
+
+
+@app.get("/song")
+def get_all_songs():
+    return {"songs": list(songs.values())}
 
 
 @app.get("/artist/<string:artist_id>")
@@ -41,13 +42,12 @@ def get_artist(artist_id):
     try:
         return artists[artist_id]
     except KeyError:
-        return {"message": "Store not found"}, 404
+        abort(404, message="Artist not found.")
 
 
-
-@app.get("/artist/<string:name>/song")
-def get_songs_by_artist(name):
-    for artist in artists:
-        if artist["name"] == name:
-            return {"songs": artist["songs"]}
-    return {"message": "Artist not found"}, 404
+@app.get("/song/<string:song_id>")
+def get_song(song_id):
+    try:
+        return songs[song_id]
+    except KeyError:
+        abort(404, message="Song not found.")
