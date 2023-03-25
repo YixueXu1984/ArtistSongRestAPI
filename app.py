@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_smorest import abort
-from db import songs, albums, artists
+from db import songs, artists
 import uuid
 
 app = Flask(__name__)
@@ -14,6 +14,13 @@ def get_artists():
 @app.post("/artist")
 def create_artist():
     artist_data = request.get_json()
+    if "name" not in artist_data:
+        abort(
+            400, message="Bad request. Ensure 'name' is included in the JSON payload."
+        )
+    for artist in artists.values():
+        if artist_data["name"] == artist["name"]:
+            abort(400, message=f"Artist already exists.")
     artist_id = uuid.uuid4().hex
     artist = {**artist_data, "id": artist_id}
     artists[artist_id] = artist
@@ -23,6 +30,21 @@ def create_artist():
 @app.post("/song")
 def create_song():
     song_data = request.get_json()
+    if (
+            "release_year" not in song_data
+            or "artist_id" not in song_data
+            or "name" not in song_data
+    ):
+        abort(
+            400,
+            message="Bad request. Ensure 'release_year', 'artist_id', and 'name' are included in JSON payload."
+        )
+    for song in songs.values():
+        if (
+            song_data["name"] == song["name"]
+            and song_data["artist_id"] == song["artist_id"]
+        ):
+            abort(400, message=f"Song already exists.")
     if song_data["artist_id"] not in artists:
         abort(404, message="Artist not found.")
     song_id = uuid.uuid4().hex
